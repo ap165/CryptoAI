@@ -36,11 +36,38 @@ export const Signup: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [otp, setOtp] = useState('');
 
+  const calculatePasswordStrength = (pass: string) => {
+    let score = 0;
+    if (!pass) return { score: 0, label: '', color: 'bg-surface-light', reqs: { length: false, upper: false, lower: false, num: false, special: false } };
+    
+    const reqs = {
+      length: pass.length >= 8,
+      upper: /[A-Z]/.test(pass),
+      lower: /[a-z]/.test(pass),
+      num: /[0-9]/.test(pass),
+      special: /[^A-Za-z0-9]/.test(pass)
+    };
+    
+    if (reqs.length) score += 20;
+    if (reqs.upper) score += 20;
+    if (reqs.lower) score += 20;
+    if (reqs.num) score += 20;
+    if (reqs.special) score += 20;
+    
+    if (score <= 20) return { score, label: 'Very Weak', color: 'bg-negative', reqs };
+    if (score <= 40) return { score, label: 'Weak', color: 'bg-negative', reqs };
+    if (score <= 60) return { score, label: 'Fair', color: 'bg-yellow-500', reqs };
+    if (score <= 80) return { score, label: 'Good', color: 'bg-primary', reqs };
+    return { score, label: 'Strong', color: 'bg-positive', reqs };
+  };
+
+  const strength = calculatePasswordStrength(password);
+
   const isStep1Valid = 
     name.trim() !== '' && 
     email.trim() !== '' && 
     username.trim() !== '' && 
-    password.length >= 6 && 
+    strength.score === 100 && 
     password === confirmPassword;
     
   const isStep2Valid = otp.trim().length === 6;
@@ -118,13 +145,58 @@ export const Signup: React.FC = () => {
                 icon={<AtSign className="w-5 h-5" />}
                 required
               />
-              <PasswordInput
-                label="Password"
-                placeholder="At least 6 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="space-y-1">
+                <PasswordInput
+                  label="Password"
+                  placeholder="At least 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                
+                {/* Password Strength Indicator */}
+                {password && (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-text-secondary">Password Strength:</span>
+                      <span className={`font-semibold ${strength.color.replace('bg-', 'text-')}`}>
+                        {strength.label}
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-surface-light rounded-full overflow-hidden flex gap-0.5">
+                      <div className={`h-full ${strength.score >= 20 ? strength.color : 'bg-transparent'} w-1/5 transition-colors duration-300`}></div>
+                      <div className={`h-full ${strength.score >= 40 ? strength.color : 'bg-transparent'} w-1/5 transition-colors duration-300`}></div>
+                      <div className={`h-full ${strength.score >= 60 ? strength.color : 'bg-transparent'} w-1/5 transition-colors duration-300`}></div>
+                      <div className={`h-full ${strength.score >= 80 ? strength.color : 'bg-transparent'} w-1/5 transition-colors duration-300`}></div>
+                      <div className={`h-full ${strength.score >= 100 ? strength.color : 'bg-transparent'} w-1/5 transition-colors duration-300`}></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-1 text-xs mt-2 text-text-muted">
+                      <div className={`flex items-center gap-1 ${strength.reqs.length ? 'text-positive' : ''}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${strength.reqs.length ? 'bg-positive' : 'bg-border'}`}></div>
+                        8+ characters
+                      </div>
+                      <div className={`flex items-center gap-1 ${strength.reqs.upper ? 'text-positive' : ''}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${strength.reqs.upper ? 'bg-positive' : 'bg-border'}`}></div>
+                        1 uppercase
+                      </div>
+                      <div className={`flex items-center gap-1 ${strength.reqs.lower ? 'text-positive' : ''}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${strength.reqs.lower ? 'bg-positive' : 'bg-border'}`}></div>
+                        1 lowercase
+                      </div>
+                      <div className={`flex items-center gap-1 ${strength.reqs.num ? 'text-positive' : ''}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${strength.reqs.num ? 'bg-positive' : 'bg-border'}`}></div>
+                        1 number
+                      </div>
+                      <div className={`flex items-center gap-1 ${strength.reqs.special ? 'text-positive' : ''}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${strength.reqs.special ? 'bg-positive' : 'bg-border'}`}></div>
+                        1 special char
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <PasswordInput
                 label="Confirm Password"
                 placeholder="Repeat password"
